@@ -1,0 +1,53 @@
+server: # 服务器元数据
+  name: Finance_Mcp_Server
+  name_zh: 金融分析 MCP 智能体
+  author: Xueyuan Sun, Shuorong Qin, Ziyang Shi
+  description: Simple Financial Processing Using MCP
+  description_zh: 使用 MCP 对金融的简单处理。
+  version: 0.1.0
+
+transport: # 服务器启动方式配置
+  type: "sse" # 可选值: stdio, sse
+  host: "127.0.0.1" # 仅在 type 为 sse 时有效，表示监听地址，默认为 0.0.0.0
+  port: 19420 # 仅在 type 为 sse 时有效，表示监听端口，默认为 12345
+
+logging: # 日志配置
+  console:
+    enabled: true
+    level: "DEBUG"
+  file:
+    enabled: true
+    level: "DEBUG"
+    path: "logs/%Y-%m-%d_%H-%M-%S.log"
+    rotation: "10 MB"
+    retention: "7 days"
+    compression: "zip"
+
+# name: finance_mcp_server
+# version: 1.0.0
+# description: 金融数据MCP服务器
+
+# agents:
+#   finance_agent:
+#     module: modules.YA_Agent.finance_agent
+#     class: FinanceAgent
+#     config:
+#       api_key_env: ALPHA_VANTAGE_API_KEY
+#       cache_ttl: 300
+
+# tools:
+#   - module: tools.finance_tool
+#     tools:
+#       - get_stock_info
+#       - get_currency_rate
+#       - query_finance_info
+
+# resources:
+#   - module: resources.hello_resource
+
+# prompts:
+#   - module: prompts.hello_prompt
+
+# logging:
+#   level: INFO
+#   file: logs/mcp_server.log
