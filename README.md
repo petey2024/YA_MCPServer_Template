@@ -7,7 +7,7 @@
 | 姓名 | 学号 | 分工 | 备注 |
 | :--: | :--: | :--: | :--: |
 |孙学远|U202414790|完成MCP服务器的基本设计|      |
-|秦硕嵘|U202414725|实现MCP金融智能体的客户端设计      |      |
+|秦硕嵘|U202414725|实现MCP金融智能体的客户端设计，添加部分功能|      |
 |      |      |      |      |
 
 ### Tool 列表
@@ -18,6 +18,11 @@
 | `get_currency_rate` | 获取货币汇率 | `from_currency: str`, `to_currency: str` (货币代码) | 实时汇率、买卖价格、时间戳 | 支持USD/CNY等主流货币 |
 | `query_finance_info` | 智能金融查询 | `query: str` (自然语言查询) | 根据查询类型返回相应金融数据 | 自动识别股票/汇率查询意图 |
 | `hello_tool` | 基础测试工具 | 无 | 服务器基本信息 | 用于验证服务器运行状态 |
+|`greeting_tool`| 返回简单的问候消息 | 无 (或` name: str`) |问候语 `message` | 基础测试工具 |
+| `get_latest_news` |获取标的最新相关新闻| 	`symbol: str`, `limit: int` | 新闻标题、内容、时间 | 支持主流财经源 |
+| `analyze_market_sentiment`|分析特定关键词的市场情感倾向 | `text: str` (文本/关键词) | 情感倾向、置信度分数 | NLP 情感分析 |
+| `calculate_risk_score` | 计算股票风险评分| 	`symbol: str` (股票代码) | 风险分数、风险等级 | 使用 K-Means 聚类 + 加权评分算法 |
+| `detect_anomaly` |检测异常交易行为 | `data: list` (交易数据) | 风险情况 | 使用 Isolation Forest 异常检测算法 |
 
 
 ### Resource 列表
