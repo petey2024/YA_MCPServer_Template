@@ -8,7 +8,7 @@
 | :--: | :--: | :--: | :--: |
 |孙学远|U202414790|完成MCP服务器的基本设计|      |
 |秦硕嵘|U202414725|实现MCP金融智能体的客户端设计，添加部分功能|      |
-|      |      |      |      |
+|史梓洋|U202414789|引入深度学习模型Amazon Chronos-Bolt，添加股票价格趋势预测功能|      |
 
 ### Tool 列表
 
@@ -23,6 +23,7 @@
 | `analyze_market_sentiment`|分析特定关键词的市场情感倾向 | `text: str` (文本/关键词) | 情感倾向、置信度分数 | NLP 情感分析 |
 | `calculate_risk_score` | 计算股票风险评分| 	`symbol: str` (股票代码) | 风险分数、风险等级 | 使用 K-Means 聚类 + 加权评分算法 |
 | `detect_anomaly` |检测异常交易行为 | `data: list` (交易数据) | 风险情况 | 使用 Isolation Forest 异常检测算法 |
+| `predict_stock_price` | 预测股票价格趋势 | `symbol: str` (代码), `days: int` (天数) | 价格预测、趋势方向、置信区间 | 基于 Amazon Chronos-Bolt 深度学习模型 |
 
 
 ### Resource 列表
@@ -48,10 +49,12 @@
 - `core/`: 核心业务逻辑模块
   - `base_agent.py`: 智能体基类，提供通用接口
   - `finance_agent.py`: 金融数据智能体实现
+  - `predictor.py`: 深度学习预测模块 (封装 Amazon Chronos-Bolt)
   
 - `tools/`: MCP工具模块
   - `hello_tool.py`: 基础测试工具
   - `finance_tool.py`: 金融数据处理工具
+  - `predict_tool.py`: 股票预测工具
   
 - `resources/`: MCP资源模块  
   - `hello_resource.py`: 基础测试资源
@@ -73,12 +76,15 @@
 - 所有密钥通过环境变量或加密配置文件管理，确保安全性
 
 ### 技术框架
-- **不使用PyTorch、TensorFlow等深度学习框架**
+- **集成 PyTorch 深度学习框架**
+- **使用了 Amazon Chronos-Forecasting 库**
 - 主要基于 **MCP (Model Context Protocol)** 协议
 - 使用 **aiohttp** 进行异步HTTP请求处理
 - 使用 **PyYAML** 进行配置文件解析
 
 ### 模型使用
-- 本项目**未使用机器学习或深度学习模型**
+- **使用 Amazon Chronos-Bolt (Tiny) 预训练模型**
+- 实现**零样本 (Zero-shot)** 时间序列预测
+- 以 Alpha Vantage 获取的历史收盘价为输入，预测未来股价趋势及置信区间
 - 专注于金融数据的获取、处理和标准化输出
-- 所有分析基于传统金融分析方法和实时市场数据
+- 结合传统金融分析方法与前沿深度学习技术
