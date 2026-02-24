@@ -279,6 +279,102 @@ class FinanceAgent(BaseAgent):
             return match.group(1), match.group(2)
         return "USD", "CNY"  # 默认
     
+    async def get_stock_prediction(self, symbol: str, days: int = 5) -> Dict[str, Any]:
+        """
+        获取股票价格预测
+        使用 Amazon Chronos-Bolt 模型
+        """
+        import datetime
+        from core.predictor import FinancialPredictor
+
+        self.logger.info(f"=== 开始股票预测: {symbol}, 预测天数: {days} ===")
+        
+        if not self._validate_api_key():
+            return {"error": "API Key未配置"}
+            
+        # 1. 获取历史数据 (TIME_SERIES_DAILY)
+        try:
+            params = {
+                "function": "TIME_SERIES_DAILY",
+                "symbol": symbol,
+                "apikey": self.api_key,
+                "outputsize": "compact"
+            }
+            
+            async with self.session.get(self.base_url, params=params) as response:
+                data = await response.json()
+                
+                # 记录完整的 API 响应以便调试
+                self.logger.info(f"历史数据API响应: {data}")
+
+                if "Error Message" in data:
+                    return {"error": f"API返回错误: {data['Error Message']}"}
+                
+                # 处理频率限制与提示信息
+                if "Note" in data:
+                    return {"error": f"API频率限制或其他提示: {data['Note']}"}
+                if "Information" in data:
+                    return {"error": f"API返回信息: {data['Information']}"}
+                
+                time_series = data.get("Time Series (Daily)", {})
+                if not time_series:
+                    # 如果没有数据，返回完整响应用于排查
+                    return {"error": f"未能获取历史数据，API响应内容: {data}"}
+                
+                # Alpha Vantage 数据是倒序的 (最新日期在前)
+                # 我们需要正序的历史数据
+                sorted_dates = sorted(time_series.keys())
+                historical_prices = [float(time_series[d]["4. close"]) for d in sorted_dates]
+                
+                if len(historical_prices) < 30:
+                    return {"error": f"历史数据不足30天 ({len(historical_prices)}天)，难以准确预测"}
+
+                # 3. 调用预测模型
+                try:
+                    predictor = FinancialPredictor() 
+                    forecast = predictor.predict(
+                        context=historical_prices,
+                        prediction_length=days,
+                        num_samples=20
+                    )
+                    
+                    last_date = sorted_dates[-1]
+                    last_price = historical_prices[-1]
+                    start_date = datetime.datetime.strptime(last_date, "%Y-%m-%d")
+                    future_dates = [(start_date + datetime.timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days)]
+                    
+                    median_forecast = forecast["median"]
+                    lower_80 = forecast["lower_80"]
+                    upper_80 = forecast["upper_80"]
+                    
+                    forecast_list = []
+                    for i, date in enumerate(future_dates):
+                        pred = median_forecast[i] if i < len(median_forecast) else 0.0
+                        trend = "up" if pred > last_price else "down"
+                        forecast_list.append({
+                            "date": date,
+                            "predicted_price": round(float(pred), 2),
+                            "confidence_interval_80": [round(float(lower_80[i]), 2), round(float(upper_80[i]), 2)],
+                            "trend": trend
+                        })
+                        
+                    return {
+                        "symbol": symbol,
+                        "last_updated": last_date,
+                        "current_price": last_price,
+                        "forecast": forecast_list
+                    }
+                    
+                except ImportError as ie:
+                    return {"error": f"预测模块导入失败: {ie}"}
+                except Exception as e:
+                    self.logger.error(f"模型预测出错: {e}")
+                    return {"error": f"预测过程出错: {str(e)}"}
+                    
+        except Exception as e:
+            self.logger.error(f"获取历史数据失败: {e}")
+            return {"error": f"获取历史数据失败: {str(e)}"}
+
     async def close(self):
         """清理资源"""
         if self.session:
