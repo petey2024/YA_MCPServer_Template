@@ -33,6 +33,7 @@
 | `finance://market/status` | 获取全球市场状态 | 无 | 各市场开市状态、时间戳 | 实时更新市场状态信息 |
 | `finance://currency/list` | 获取支持的货币列表 | 无 | 货币代码、名称、符号列表 | 包含主流货币信息 |
 | `finance://stock/symbols/{market}` | 获取指定市场股票代码 | `market: str` (市场标识) | 该市场股票代码列表 | 支持us/hk/cn市场 |
+| `finance://stock/quote/{symbol}` | 获取股票实时报价 | `symbol: str` (股票代码) | 实时价格、涨跌幅、成交量、时间戳 | 支持 Alpha Vantage `GLOBAL_QUOTE` 接口 |
 | `hello_resource` | 基础测试资源 | 无 | 示例资源数据 | 用于验证资源功能 |
 
 ### Prompts 列表
