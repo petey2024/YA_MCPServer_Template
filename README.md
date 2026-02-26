@@ -77,14 +77,13 @@
 
 ### 技术框架
 - **集成 PyTorch 深度学习框架**
-- **使用了 Amazon Chronos-Forecasting 库**
-- 主要基于 **MCP (Model Context Protocol)** 协议
+- **使用了 Amazon Chronos-Forecasting**
+- 主要基于 **MCP** 协议
 - 使用 **aiohttp** 进行异步HTTP请求处理
-- 使用 **PyYAML** 进行配置文件解析
 
 ### 模型使用
-- **使用 Amazon Chronos-Bolt (Tiny) 预训练模型**
-- 实现**零样本 (Zero-shot)** 时间序列预测
+- 使用 Amazon Chronos-Bolt 深度学习模型
+- 实现零样本时间序列预测
 - 以 Alpha Vantage 获取的历史收盘价为输入，预测未来股价趋势及置信区间
 - 专注于金融数据的获取、处理和标准化输出
 - 结合传统金融分析方法与前沿深度学习技术
