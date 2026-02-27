@@ -127,7 +127,7 @@ python deepseek_mcp_cli.py --verbose
 - `--max-steps 8`：限制 tool-calling 循环次数
 - `--verbose`：打印 DeepSeek 请求预览、原始响应 JSON、tool_calls 与工具返回值（API Key 会打码）
 
-### 2) MCP直连客户端（用于简单调试，不过更推荐用mcp dev server.py进入网页中进行可视化调试）
+### 2) MCP直连客户端（用于简单调试，推荐用MCP Inspector在网页中调试）
 
 文件：`finance_mcp_client.py`
 
@@ -138,6 +138,29 @@ python deepseek_mcp_cli.py --verbose
 ```bash
 python finance_mcp_client.py
 ```
+
+### 3) Web 展示（Vue 页面 + Bridge，推荐演示用）
+
+用途：用网页实时展示 DeepSeek ↔ MCP 的闭环过程（SSE events）与最终输出。
+
+1）启动 MCP Server（SSE）：
+
+```bash
+uv run server.py
+```
+
+2）另开一个终端启动 Bridge（默认 `127.0.0.1:19500`）：
+
+```bash
+uv run bridge_server.py
+```
+
+3）浏览器打开：
+
+- `http://127.0.0.1:19500/`
+
+页面里可以填写/确认 `MCP Server URL（SSE）`（默认 `http://127.0.0.1:19420/`），然后输入问题点击“开始”。
+
 
 
 ## MCP 能力（Tools / Resources / Prompts）
