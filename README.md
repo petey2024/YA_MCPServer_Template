@@ -13,9 +13,36 @@
 | :--: | :--: | :--: | :--: |
 | 孙学远 | U202414790 | 完成 MCP 服务器的基本设计 | |
 | 秦硕嵘 | U202414725 | 实现 MCP 金融智能体客户端设计，添加部分功能 | |
-| 史梓洋 | U202414789 | 引入 Amazon Chronos-Bolt 深度学习模型，预测股票未来价格；完成与DeepSeek大模型的交互闭环，设计Client CLI 客户端，实现端到端闭环 | |
+| 史梓洋 | U202414789 | 引入 Amazon Chronos-Bolt 深度学习模型，预测股票价格；完成与DeepSeek大模型的交互闭环，设计Client CLI 客户端 | |
 
 ## 快速开始
+
+### 0) 环境准备（使用 uv）
+
+1）在项目根目录创建/同步虚拟环境并安装依赖：
+
+```bash
+uv sync
+```
+
+2）激活虚拟环境：
+
+Windows：
+
+```powershell
+.venv\Scripts\activate
+```
+
+Linux / macOS：
+
+```bash
+source .venv/bin/activate
+```
+
+#### MCP Inspector 额外依赖
+
+如果你要使用 MCP Inspector（`mcp dev server.py`），请确保已安装 Node.js。
+相关说明可参考 docs/prerequisites/node.js.mdx。
 
 ### 1) 配置
 
@@ -44,10 +71,6 @@
 ```bash
 uv run server.py 
 ```
-or
-```bash
-python server.py 
-```
 
 默认 SSE 地址：`http://127.0.0.1:19420/`
 
@@ -73,7 +96,7 @@ mcp dev server.py
 - 输入服务器地址（例如 `http://127.0.0.1:19420/`）
 - 在configuration中输入Proxy Session Token，这个在mcp dev server.py后会在命令行中给出
 - 点击 Connect，等待连接成功
-- 
+
 > 说明：当选择 `stdio` 时，Inspector 可以自动拉起服务进程；但 `sse` 模式需要你手动先把服务端跑起来。
 
 ## 客户端（Clients）
