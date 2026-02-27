@@ -73,6 +73,50 @@
 
 ### 其他需要说明的情况
 
+## DeepSeek 闭环（命令行客户端）
+
+本项目的 MCP Server 负责暴露工具（tools/resources/prompts）。
+若要让 AI 大模型自动调用这些工具并把结果整合成最终回答，需要一个“闭环客户端（Bridge Client）”来做编排：
+
+DeepSeek（LLM）→ 返回 tool_calls → 调用 MCP 工具 → 回填 tool 结果 → DeepSeek 输出最终回答
+
+仓库已提供命令行版闭环客户端：`deepseek_mcp_cli.py`。
+
+### 1) 配置 DeepSeek
+
+在系统环境变量或 `env.yaml` 中配置（推荐用环境变量）：
+
+- `DEEPSEEK_API_KEY`: 你的 DeepSeek API Key
+- `DEEPSEEK_BASE_URL`: OpenAI 兼容接口 base url（默认 `https://api.deepseek.com/v1`）
+- `DEEPSEEK_MODEL`: 模型名（默认 `deepseek-chat`，以你的控制台为准）
+
+### 2) 启动 MCP Server（SSE）
+
+确保 [config.yaml](config.yaml) 中：
+
+- `transport.type: "sse"`
+- `transport.host: "127.0.0.1"`
+- `transport.port: 19420`
+
+启动：
+
+`python server.py`
+
+### 3) 运行闭环客户端（展示完整调用流程）
+
+一次性提问：
+
+`python deepseek_mcp_cli.py --query "查询 AAPL 最新价格，并结合新闻与风险评分给出建议" --verbose`
+
+说明：
+
+- `--verbose` 会打印 DeepSeek 请求预览、原始响应 JSON、每次 tool_calls 以及工具返回值（对 API Key 会打码）。
+- 如需指定 MCP Server：`--server-url http://127.0.0.1:19420/`
+
+交互模式（连续提问）：
+
+`python deepseek_mcp_cli.py --verbose`
+
 ### 密钥管理
 - `ALPHA_VANTAGE_API_KEY`: Alpha Vantage金融数据API访问密钥
 - 所有密钥通过环境变量或加密配置文件管理，确保安全性
