@@ -22,14 +22,14 @@
 核心配置文件：
 
 - `config.yaml`：MCP Server 元信息与 transport（stdio/sse）配置
-- `env.yaml`：API Key 等运行环境配置（也支持系统环境变量，环境变量优先级更高）
+- `env.yaml`：API Key 等运行环境配置
 
 常用环境变量：
 
 - `ALPHA_VANTAGE_API_KEY`：Alpha Vantage Key（用于实时行情/汇率等）
-- `DEEPSEEK_API_KEY`：DeepSeek Key（用于闭环客户端）
+- `DEEPSEEK_API_KEY`：DeepSeek Key（用于客户端）
 - `DEEPSEEK_BASE_URL`：DeepSeek OpenAI 兼容 base url（默认 `https://api.deepseek.com/v1`）
-- `DEEPSEEK_MODEL`：模型名（默认 `deepseek-chat`，以控制台为准）
+- `DEEPSEEK_MODEL`：模型名
 
 ### 2) 启动 MCP Server（SSE）
 
@@ -42,7 +42,11 @@
 启动：
 
 ```bash
-uv run server.py or python server.py
+uv run server.py 
+```
+or
+```bash
+python server.py 
 ```
 
 默认 SSE 地址：`http://127.0.0.1:19420/`
@@ -76,7 +80,7 @@ mcp dev server.py
 
 本仓库提供两个命令行客户端：
 
-### 1) DeepSeek 闭环客户端（推荐）
+### 1) DeepSeek闭环客户端（推荐）
 
 文件：`deepseek_mcp_cli.py`
 
@@ -100,7 +104,7 @@ python deepseek_mcp_cli.py --verbose
 - `--max-steps 8`：限制 tool-calling 循环次数
 - `--verbose`：打印 DeepSeek 请求预览、原始响应 JSON、tool_calls 与工具返回值（API Key 会打码）
 
-### 2) MCP 工具直连客户端（用于简单调试，不过更推荐用mcp dev server.py进入网页中进行调试）
+### 2) MCP直连客户端（用于简单调试，不过更推荐用mcp dev server.py进入网页中进行可视化调试）
 
 文件：`finance_mcp_client.py`
 
@@ -135,8 +139,8 @@ python finance_mcp_client.py
 
 | 资源名称 | 功能描述 | 输入 | 输出 | 备注 |
 | :------: | :------: | :--: | :--: | :--: |
-| `finance://market/status` | 获取市场状态 | 无 | 市场状态/时间戳 | 优先真实 API，失败则降级模拟 |
-| `finance://currency/list` | 获取支持的货币列表 | 无 | 货币列表 | 优先真实 API，失败则降级静态 |
+| `finance://market/status` | 获取市场状态 | 无 | 市场状态/时间戳 |  |
+| `finance://currency/list` | 获取支持的货币列表 | 无 | 货币列表 |  |
 | `finance://stock/symbols/{market}` | 获取指定市场股票代码 | `market: str` | 代码列表 | 支持 us/hk/cn 等 |
 | `finance://stock/quote/{symbol}` | 获取股票实时报价 | `symbol: str` | 报价信息 | |
 | `hello_resource` | 基础测试资源 | 无 | 示例数据 | |
@@ -151,7 +155,7 @@ python finance_mcp_client.py
 | `predict_price_report` | 股价预测分析报告模板 | `symbol: str`, `days: int` | 预测报告模板 | |
 | `hello_prompt` | 基础测试提示词 | 无 | 示例模板 | |
 
-## 项目结构（与当前仓库一致）
+## 项目结构
 
 ```text
 YA_MCPServer_Template/
