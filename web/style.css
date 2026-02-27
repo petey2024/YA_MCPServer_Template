@@ -1,0 +1,19 @@
+*{ box-sizing:border-box; }
+body{ margin:0; }
+.container{ max-width:1100px; margin:0 auto; padding:16px; }
+.h1{ font-size:20px; font-weight:700; margin:0 0 12px; }
+.row{ display:flex; gap:12px; flex-wrap:wrap; }
+.card{ border:1px solid currentColor; border-radius:10px; padding:12px; }
+.card.grow{ flex:1; min-width:320px; }
+.label{ font-size:12px; opacity:.75; margin-bottom:6px; }
+.input, .textarea{ width:100%; border:1px solid currentColor; border-radius:8px; padding:8px 10px; }
+.textarea{ min-height:90px; resize:vertical; }
+.btn{ border:1px solid currentColor; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; background:transparent; }
+.btn.secondary{ opacity:.85; }
+.btn:disabled{ opacity:.55; cursor:not-allowed; }
+.kv{ display:flex; gap:12px; flex-wrap:wrap; }
+.kv > div{ min-width:220px; }
+.small{ font-size:12px; opacity:.75; }
+.logs{ font-size:12px; line-height:1.45; white-space:pre-wrap; }
+.badge{ display:inline-block; padding:2px 8px; border:1px solid currentColor; border-radius:999px; font-size:12px; opacity:.8; }
+hr{ border:none; border-top:1px solid currentColor; opacity:.35; margin:12px 0; }
