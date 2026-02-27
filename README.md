@@ -1,7 +1,7 @@
 ## Finance_Mcp_Server
 
 [一句话功能简介]
-本项目是一个基于Model Context Protocol (MCP) 的金融数据处理服务器，使用了Alpha Vantage金融API，提供股票查询、汇率转换、市场分析等金融数据服务。
+本项目是一个融合深度学习与传统量化分析的智能金融 MCP 服务器。它集成 Alpha Vantage API 提供实时行情查询，引入了Amazon Chronos-Bolt深度学习模型进行股价趋势预测，并结合情感分析、风险评分及异常检测等 AI 算法，提供股票查询、汇率转换、市场分析等金融数据服务。
 ### 组员信息
 
 | 姓名 | 学号 | 分工 | 备注 |
@@ -33,7 +33,7 @@
 | `finance://market/status` | 获取全球市场状态 | 无 | 各市场开市状态、时间戳 | 实时更新市场状态信息 |
 | `finance://currency/list` | 获取支持的货币列表 | 无 | 货币代码、名称、符号列表 | 包含主流货币信息 |
 | `finance://stock/symbols/{market}` | 获取指定市场股票代码 | `market: str` (市场标识) | 该市场股票代码列表 | 支持us/hk/cn市场 |
-| `finance://stock/quote/{symbol}` | 获取股票实时报价 | `symbol: str` (股票代码) | 实时价格、涨跌幅、成交量、时间戳 | 支持 Alpha Vantage `GLOBAL_QUOTE` 接口 |
+| `finance://stock/quote/{symbol}` | 获取股票实时报价 | `symbol: str` (股票代码) | 实时价格、涨跌幅、成交量、时间戳 | 
 | `hello_resource` | 基础测试资源 | 无 | 示例资源数据 | 用于验证资源功能 |
 
 ### Prompts 列表
@@ -43,6 +43,7 @@
 | `analyze_stock_trend` | 股票趋势分析提示 | `symbol: str`, `period: str` (周期) | 专业股票分析报告 | 提供技术指标和投资建议 |
 | `currency_arbitrage_analysis` | 货币套利机会分析 | `base_currency: str`, `target_currencies: list` | 套利策略和风险评估 | 识别交叉汇率套利机会 |
 | `portfolio_risk_assessment` | 投资组合风险评估 | `portfolio: dict` (资产配置) | 风险评分和缓解建议 | 多维风险评估体系 |
+| `predict_price_report` | 股价预测分析报告 | `symbol: str`, `days: int` (预测天数) | 深度学习预测简报 | 基于Chronos-Bolt模型上下文 |
 | `hello_prompt` | 基础测试提示词 | 无 | 示例提示模板 | 用于验证提示词功能 |
 
 ### 项目结构

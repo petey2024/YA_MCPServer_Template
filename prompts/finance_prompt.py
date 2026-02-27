@@ -11,7 +11,9 @@ import json
 import aiohttp
 import os
 import yaml
-from datetime import datetime
+import csv
+import io
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger("finance_prompts")
@@ -82,6 +84,21 @@ async def _make_api_request(params: dict) -> dict:
         session = await _get_api_session()
         async with session.get(ALPHA_VANTAGE_BASE_URL, params=params) as response:
             if response.status == 200:
+                # 检查响应类型
+                content_type = response.headers.get("Content-Type", "")
+                
+                # 情况1: 处理 CSV 响应
+                if "application/x-download" in content_type or "text/csv" in content_type:
+                    text_data = await response.text()
+                    try:
+                        csv_file = io.StringIO(text_data)
+                        reader = csv.DictReader(csv_file)
+                        data_list = list(reader)
+                        return {"data": data_list}
+                    except Exception as csv_e:
+                         return {"error": f"CSV解析失败: {str(csv_e)}"}
+
+                # 情况2: 处理 JSON 响应
                 data = await response.json()
                 # 检查API返回的错误信息
                 if "Error Message" in data:
@@ -318,5 +335,39 @@ async def portfolio_risk_assessment(portfolio: dict) -> str:
     except Exception as e:
         return f"生成风险评估提示词失败: {str(e)}"
 
+@YA_MCPServer_Prompt()
+async def predict_price_report(symbol: str, days: int = 5) -> str:
+    """
+    生成股价预测分析报告指令（结合 Chronos-Bolt 模型概念）
+    
+    Args:
+        symbol: 股票代码
+        days: 预测天数
+    
+    Returns:
+        包含预测上下文的提示词
+    """
+    # 这里模拟获取预测数据，实际场景中可以调用 core/predictor.py 的逻辑
+    # 为了演示 Prompt 的作用，我们构建一个包含模拟预测数据的场景
+    
+    target_date = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d')
+    
+    return f"""
+请为股票 {symbol} 生成一份基于深度学习模型的股价预测分析报告。
+
+**模型输入上下文**：
+- 模型：Amazon Chronos-Bolt (零样本时间序列预测)
+- 预测目标日期：{target_date} ({days}天后)
+- 当前数据来源：Alpha Vantage API
+
+**任务要求**：
+1. 解释基于 Chronos-Bolt 模型的预测原理（通过历史收盘价序列进行概率预测）。
+2. 分析该预测结果的置信区间对于交易决策的意义。
+3. 结合当前 {symbol} 的市场情绪（假设为中性偏乐观），给出操作建议。
+4. 提醒深度学习模型预测的局限性（如突发新闻影响）。
+
+请生成一份专业的、同时也易于理解的投资参考简报。
+"""
+
 # 导出提示词列表
-prompts = [analyze_stock_trend, currency_arbitrage_analysis, portfolio_risk_assessment]
+prompts = [analyze_stock_trend, currency_arbitrage_analysis, portfolio_risk_assessment, predict_price_report]
