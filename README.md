@@ -1,6 +1,6 @@
 # Finance_Mcp_Server
 
-本项目是一个面向金融场景的 MCP（Model Context Protocol）服务器模板：
+本项目是一个面向金融场景的 MCP（Model Context Protocol）服务器及智能体：
 
 - **Server 侧**：通过 MCP 暴露 tools/resources/prompts
 - **Client 侧**：既可直接调用 MCP 工具，也可接入 DeepSeek大模型完成 tool-calling 闭环
