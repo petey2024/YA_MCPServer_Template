@@ -206,6 +206,7 @@ uv run bridge_server.py
 ```text
 YA_MCPServer_Template/
 ├─ server.py                      # MCP Server 启动入口（FastMCP + stdio/SSE）
+├─ bridge_server.py               # Web Bridge：转发 DeepSeek ↔ MCP 闭环事件（SSE），并提供 web/ 静态页面
 ├─ deepseek_mcp_cli.py            # DeepSeek ↔ MCP 闭环命令行客户端（tool-calling loop）
 ├─ finance_mcp_client.py          # 官方 MCP SDK 直连客户端（终端 UI）
 ├─ config.yaml                    # Server 元信息/transport 配置
@@ -213,6 +214,10 @@ YA_MCPServer_Template/
 ├─ pyproject.toml                 # Python 依赖声明
 ├─ uv.lock                        # uv 锁定文件（可选）
 ├─ setup.py                       # 预留的初始化入口
+├─ web/                           # Web 演示页面
+│  ├─ index.html                   # 页面入口
+│  ├─ app.js                       # 前端逻辑
+│  └─ style.css                    # 页面样式
 ├─ tools/                         # MCP Tools（通过装饰器注册）
 │  ├─ __init__.py                 # 自动扫描并注册 tools 目录下的工具
 │  ├─ finance_tool.py             # 行情/汇率/自然语言查询
@@ -230,13 +235,22 @@ YA_MCPServer_Template/
 │  ├─ finance_prompt.py           # 金融分析提示模板（可含实时数据）
 │  └─ hello_prompt.py             # 示例 prompt
 ├─ YA_Agent/                      # 智能体封装（例如 FinanceAgent）
+│  ├─ base_agent.py
+│  └─ finance_agent.py
 ├─ core/                          # 预测/模型相关核心逻辑
+│  ├─ predictor.py                # Chronos-Bolt 预测封装
+│  └─ hello_secrets.py            # Secrets 示例（读取/演示用）
 ├─ modules/                       # 公共模块（连接器/适配器/工具链）
 │  └─ YA_Common/
 │     ├─ mcp/                     # MCPClient、Connector、OpenAI tools 适配器等
 │     ├─ utils/                   # config/logger/helpers 等
 │     └─ types/                   # 类型定义
-└─ docs/                          # 开发指南与说明文档
+│  └─ YA_Secrets/                 # Secrets 管理模块（SOPS/Age 脚本与解析器，含跨平台脚本）
+├─ docs/                          # 开发指南与说明文档
+│  ├─ prerequisites/              # 环境依赖说明（git/node/uv/sops 等）
+│  └─ development-guides/         # MCP server 开发/调试指南
+├─ logs/                          # 运行日志（自动生成，可按需清理）
+└─ workflows/                     # 预留：流程/工作流相关代码
 ```
 
 ## 备注
