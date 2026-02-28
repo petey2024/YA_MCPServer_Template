@@ -253,6 +253,15 @@ YA_MCPServer_Template/
 └─ workflows/                     # 预留：流程/工作流相关代码
 ```
 
+## 深度学习模型使用说明
+
+- 使用了PyTorch：用于时间序列预测能力（Amazon Chronos-Bolt）推理。
+
+- 深度学习模型：Amazon Chronos-Bolt（通过 `chronos-forecasting` + `transformers` 实现），用于 `predict_stock_price` 工具的价格趋势预测。
+- 传统机器学习模型：
+	- K-Means：用于 `calculate_risk_score` 风险聚类（`scikit-learn`）。
+	- Isolation Forest：用于 `detect_anomaly` 异常检测（`scikit-learn`）。
+
 ## 备注
 
 - 若工具涉及外部 API（Alpha Vantage / DeepSeek），请优先用系统环境变量配置 Key；`env.yaml` 适合本地开发。
