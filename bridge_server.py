@@ -290,21 +290,44 @@ async def serve_index(_: Request):
     index = WEB_DIR / "index.html"
     if not index.exists():
         return PlainTextResponse("web/index.html not found", status_code=404)
-    return FileResponse(index)
+    return FileResponse(
+        index,
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 async def serve_app_js(_: Request):
     path = WEB_DIR / "app.js"
     if not path.exists():
         return PlainTextResponse("web/app.js not found", status_code=404)
-    return FileResponse(path, media_type="text/javascript")
+    return FileResponse(
+        path,
+        media_type="text/javascript",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 async def serve_style(_: Request):
     path = WEB_DIR / "style.css"
     if not path.exists():
         return PlainTextResponse("web/style.css not found", status_code=404)
-    return FileResponse(path, media_type="text/css")
+    return FileResponse(
+        path,
+        media_type="text/css",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 async def api_chat(request: Request):

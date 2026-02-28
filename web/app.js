@@ -1,5 +1,182 @@
 const { createApp, ref, computed } = Vue;
 
+function escapeHtml(input) {
+  return String(input)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function sanitizeUrl(url) {
+  const raw = String(url || "").trim();
+  if (!raw) return "#";
+  if (/^(https?:\/\/|mailto:)/i.test(raw)) return raw;
+  return "#";
+}
+
+function renderInlineMarkdown(text) {
+  let s = String(text);
+  s = s.replace(/`([^`\n]+)`/g, (_, code) => `<code>${code}</code>`);
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, (_, t) => `<strong>${t}</strong>`);
+  s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, (_, p1, t) => `${p1}<em>${t}</em>`);
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+    const href = sanitizeUrl(url);
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+  return s;
+}
+
+function basicMarkdownToHtml(markdownText) {
+  const md = String(markdownText ?? "").replace(/\r\n/g, "\n");
+  const lines = md.split("\n");
+
+  let html = "";
+  let inCodeBlock = false;
+  let codeLang = "";
+  let codeBuffer = [];
+  let inUl = false;
+  let inOl = false;
+  let inBlockquote = false;
+
+  const closeLists = () => {
+    if (inUl) {
+      html += "</ul>";
+      inUl = false;
+    }
+    if (inOl) {
+      html += "</ol>";
+      inOl = false;
+    }
+  };
+
+  const closeBlockquote = () => {
+    if (inBlockquote) {
+      html += "</blockquote>";
+      inBlockquote = false;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const fenceMatch = rawLine.match(/^```\s*([a-zA-Z0-9_-]+)?\s*$/);
+    if (fenceMatch) {
+      if (!inCodeBlock) {
+        closeLists();
+        closeBlockquote();
+        inCodeBlock = true;
+        codeLang = fenceMatch[1] || "";
+        codeBuffer = [];
+      } else {
+        const code = escapeHtml(codeBuffer.join("\n"));
+        const langClass = codeLang ? ` class="language-${escapeHtml(codeLang)}"` : "";
+        html += `<pre><code${langClass}>${code}</code></pre>`;
+        inCodeBlock = false;
+        codeLang = "";
+        codeBuffer = [];
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBuffer.push(rawLine);
+      continue;
+    }
+
+    if (!rawLine.trim()) {
+      closeLists();
+      closeBlockquote();
+      continue;
+    }
+
+    const bqMatch = rawLine.match(/^>\s?(.*)$/);
+    if (bqMatch) {
+      closeLists();
+      if (!inBlockquote) {
+        html += "<blockquote>";
+        inBlockquote = true;
+      }
+      const safe = renderInlineMarkdown(escapeHtml(bqMatch[1]));
+      html += `<p>${safe}</p>`;
+      continue;
+    } else {
+      closeBlockquote();
+    }
+
+    const heading = rawLine.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) {
+      closeLists();
+      const level = heading[1].length;
+      const safe = renderInlineMarkdown(escapeHtml(heading[2].trim()));
+      html += `<h${level}>${safe}</h${level}>`;
+      continue;
+    }
+
+    const ulItem = rawLine.match(/^\s*[-*]\s+(.*)$/);
+    if (ulItem) {
+      if (inOl) {
+        html += "</ol>";
+        inOl = false;
+      }
+      if (!inUl) {
+        html += "<ul>";
+        inUl = true;
+      }
+      const safe = renderInlineMarkdown(escapeHtml(ulItem[1].trim()));
+      html += `<li>${safe}</li>`;
+      continue;
+    }
+
+    const olItem = rawLine.match(/^\s*\d+\.\s+(.*)$/);
+    if (olItem) {
+      if (inUl) {
+        html += "</ul>";
+        inUl = false;
+      }
+      if (!inOl) {
+        html += "<ol>";
+        inOl = true;
+      }
+      const safe = renderInlineMarkdown(escapeHtml(olItem[1].trim()));
+      html += `<li>${safe}</li>`;
+      continue;
+    }
+
+    closeLists();
+    const safe = renderInlineMarkdown(escapeHtml(rawLine.trim()));
+    html += `<p>${safe}</p>`;
+  }
+
+  if (inCodeBlock) {
+    const code = escapeHtml(codeBuffer.join("\n"));
+    const langClass = codeLang ? ` class="language-${escapeHtml(codeLang)}"` : "";
+    html += `<pre><code${langClass}>${code}</code></pre>`;
+  }
+  closeLists();
+  closeBlockquote();
+
+  return html;
+}
+
+function renderMarkdownToSafeHtml(markdownText) {
+  const md = String(markdownText ?? "");
+
+  const marked = window.marked;
+  if (marked && typeof marked.parse === "function") {
+    try {
+      const html = marked.parse(md, { headerIds: false, mangle: false });
+      const DOMPurify = window.DOMPurify;
+      if (DOMPurify && typeof DOMPurify.sanitize === "function") {
+        return DOMPurify.sanitize(html);
+      }
+    } catch {
+      // ignore and fall back
+    }
+  }
+
+  return basicMarkdownToHtml(md);
+}
+
 function safeJsonParse(line) {
   try {
     return JSON.parse(line);
@@ -32,6 +209,25 @@ createApp({
     const events = ref([]);
     const finalText = ref("");
     const errorText = ref("");
+
+    const finalHtml = computed(() => renderMarkdownToSafeHtml(finalText.value));
+
+    const connectionTone = computed(() => {
+      if (status.value === "error") return "bad";
+      if (isRunning.value || status.value === "connecting" || status.value === "running") return "warn";
+      if (status.value === "done") return "ok";
+      if (status.value === "stopped") return "warn";
+      return "warn";
+    });
+
+    const connectionText = computed(() => {
+      if (status.value === "error") return "连接异常";
+      if (status.value === "connecting") return "正在连接…";
+      if (status.value === "running") return "正在运行";
+      if (status.value === "done") return "已完成";
+      if (status.value === "stopped") return "已停止";
+      return "未开始";
+    });
 
     /** @type {import('vue').Ref<EventSource|null>} */
     const esRef = ref(null);
@@ -160,77 +356,111 @@ createApp({
       events,
       logsText,
       finalText,
+      finalHtml,
       errorText,
+      connectionTone,
+      connectionText,
       start,
       stop,
       reset,
     };
   },
   template: `
-    <div class="container">
-      <div class="h1">DeepSeek ↔ MCP 闭环演示（Web）</div>
+    <div class="appLayout">
+      <aside class="sidebar">
+        <div class="sidebarHeader">
+          <div class="sidebarTitle">MCP 控制台</div>
+          <div class="sidebarSub">Bridge (SSE) · Tools / Events / Final</div>
+        </div>
 
-      <div class="row">
-        <div class="card grow">
-          <div class="label">问题（query）</div>
-          <textarea class="textarea" v-model="query" placeholder="例如：给我分析一下 AAPL 的风险，并给出建议"></textarea>
 
-          <div style="height:10px"></div>
+        <div class="sidebarSection">
+          <div class="sectionTitle">连接配置</div>
+          <div class="panel">
+            <div class="label">MCP Server URL（SSE）</div>
+            <input class="input" v-model="serverUrl" />
 
-          <div class="kv">
-            <div>
-              <div class="label">MCP Server URL（SSE）</div>
-              <input class="input" v-model="serverUrl" />
-              <div class="small">默认：http://127.0.0.1:19420</div>
+            <div class="divider"></div>
+
+            <div class="row">
+              <div style="flex:1;min-width:140px">
+                <div class="label">max_steps</div>
+                <input class="input" type="number" min="1" max="30" v-model.number="maxSteps" />
+              </div>
+              <div style="flex:1;min-width:140px">
+                <div class="label">verbose</div>
+                <button class="btn secondary" @click="verbose = !verbose" :disabled="isRunning">
+                  {{ verbose ? 'ON' : 'OFF' }}
+                </button>
+              </div>
             </div>
-            <div>
-              <div class="label">max_steps</div>
-              <input class="input" type="number" min="1" max="30" v-model.number="maxSteps" />
-              <div class="small">工具调用循环最多步数</div>
-            </div>
-            <div>
-              <div class="label">verbose</div>
-              <div class="small" style="margin-bottom:8px">输出更多事件</div>
-              <button class="btn secondary" @click="verbose = !verbose" :disabled="isRunning">
-                {{ verbose ? 'ON' : 'OFF' }}
-              </button>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row" style="align-items:center">
-            <button class="btn" @click="start" :disabled="isRunning">开始</button>
-            <button class="btn secondary" @click="stop" :disabled="!isRunning">停止</button>
-            <span class="badge">状态：{{ status }}</span>
-            <span class="badge" v-if="toolsCount !== null">tools：{{ toolsCount }}</span>
-          </div>
-
-          <div class="small" style="margin-top:10px" v-if="meta">
-            MCP：{{ meta.mcp_server_url }} ｜ DeepSeek：{{ meta.deepseek_model }} ｜ max_steps：{{ meta.max_steps }}
-          </div>
-
-          <div class="small" style="margin-top:10px; color:#ffb4b4" v-if="errorText">
-            {{ errorText }}
           </div>
         </div>
 
-        <div class="card grow">
-          <div class="label">过程日志（SSE events）</div>
-          <div class="logs" style="min-height:360px">{{ logsText || '（暂无）' }}</div>
+        <div class="sidebarSection">
+          <div class="sectionTitle">连接状态</div>
+          <div class="panel">
+            <div class="connRow">
+              <span :class="['statusDot', connectionTone]"></span>
+              <div class="small">Bridge：{{ connectionText }}</div>
+            </div>
+            <div class="small" style="margin-top:10px" v-if="toolsCount !== null">tools：{{ toolsCount }}</div>
+            <div class="small" style="margin-top:6px" v-if="meta">
+              模型：{{ meta.deepseek_model }}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div style="height:12px"></div>
+        <div class="sidebarSection">
+          <div class="sectionTitle">运行说明</div>
+          <div class="panel">
+            <div class="codeBlock">cd YA_MCPServer_Template\nuv run server.py\nuv run bridge_server.py</div>
+            <div class="small" style="margin-top:10px">提示：密钥只在服务端读取</div>
+          </div>
+        </div>
+      </aside>
 
-      <div class="card">
-        <div class="label">最终输出（final）</div>
-        <div class="logs">{{ finalText || '（暂无）' }}</div>
-      </div>
+      <main class="main">
+        <div class="hero">
+          <div class="heroKicker">MCP Server 的 SSE 端点地址（默认由 config.yaml 的 transport 决定）</div>
+          <div class="heroTitle">金融智能体演示</div>
+          <div class="heroDesc">
+            输入问题 → DeepSeek tool-calling → MCP Tools → 回填结果 → 输出 final。\n
+            你可以尝试：<strong>“分析 AAPL 风险并给建议”</strong> / <strong>“预测 TSLA 未来 7 天价格趋势”</strong>
+          </div>
+        </div>
 
-      <div class="small" style="margin-top:10px">
-        提示：先启动 MCP Server（SSE）再启动 Bridge。密钥只在服务端读取。
-      </div>
+        <div class="content">
+          <div class="card">
+            <div class="label">最终输出（final）</div>
+            <div class="chatBubble" v-if="finalText">
+              <div class="md" v-html="finalHtml"></div>
+            </div>
+            <div class="chatBubble ghost" v-else>（暂无输出，发送问题开始）</div>
+          </div>
+
+          <div class="card">
+            <div class="label">过程日志（SSE events）</div>
+            <div class="logs tall">{{ logsText || '（暂无）' }}</div>
+          </div>
+
+          <div class="inputBar">
+            <div class="row rowCenter">
+              <input
+                class="input chatInput"
+                v-model="query"
+                :disabled="isRunning"
+                placeholder="输入消息，例如：识别一下 / 查询价格 / 预测趋势…"
+                @keydown.enter.prevent="start"
+              />
+              <button class="btn" @click="start" :disabled="isRunning">发送</button>
+              <button class="btn secondary" @click="stop" :disabled="!isRunning">停止</button>
+              <span class="badge">状态：{{ status }}</span>
+            </div>
+            <div class="small error" v-if="errorText">{{ errorText }}</div>
+          </div>
+        </div>
+      </main>
     </div>
   `,
 }).mount("#app");
