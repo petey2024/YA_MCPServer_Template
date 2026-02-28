@@ -5,7 +5,7 @@
 - **Server 侧**：通过 MCP 暴露 tools/resources/prompts
 - **Client 侧**：既可直接调用 MCP 工具，也可接入 DeepSeek大模型完成 tool-calling 闭环
 
-> 典型闭环：DeepSeek（LLM）→ tool_calls → 调用 MCP Tool → 回填 Tool 结果 → DeepSeek 输出最终答案
+> 闭环：DeepSeek（LLM）→ tool_calls → 调用 MCP Tool → 回填 Tool 结果 → DeepSeek 输出最终答案
 
 ## 组员信息
 
